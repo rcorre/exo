@@ -14,6 +14,8 @@ const MOVE_BLOOM_DEG := 4.0
 const FIRE_BLOOM_DEG := 3.0
 const BLOOM_DECAY_DEG := 6.0
 
+const BULLET_TRAIL_SCENE := preload("res://weapons/bullet_trail.tscn")
+
 @onready var head: Node3D = $Head
 @onready var camera: Camera3D = $Head/Camera3D
 @onready var reticle: Control = $HUD/Reticle
@@ -55,8 +57,18 @@ func _fire() -> void:
 	query.exclude = [self]
 
 	var result := get_world_3d().direct_space_state.intersect_ray(query)
-	if result and result.collider.has_method("take_damage"):
-		result.collider.take_damage(FIRE_DAMAGE)
+	var hit_point := to
+	if result:
+		hit_point = result.position
+		if result.collider.has_method("take_damage"):
+			result.collider.take_damage(FIRE_DAMAGE)
+
+	_spawn_trail(from, hit_point)
+
+func _spawn_trail(from: Vector3, to: Vector3) -> void:
+	var trail := BULLET_TRAIL_SCENE.instantiate()
+	get_tree().current_scene.add_child(trail)
+	trail.setup(from, to)
 
 func _current_spread_deg() -> float:
 	var horizontal_speed := Vector2(velocity.x, velocity.z).length()
