@@ -5,8 +5,11 @@ const ACCEL := 20.0
 const DECEL := 35.0
 const MOUSE_SENSITIVITY := 0.003
 const PITCH_LIMIT := deg_to_rad(89.0)
+const FIRE_RANGE := 100.0
+const FIRE_DAMAGE := 25
 
 @onready var head: Node3D = $Head
+@onready var camera: Camera3D = $Head/Camera3D
 
 var gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
 
@@ -20,8 +23,22 @@ func _unhandled_input(event: InputEvent) -> void:
 		head.rotation.x = clamp(head.rotation.x, -PITCH_LIMIT, PITCH_LIMIT)
 	elif event.is_action_pressed("ui_cancel"):
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
-	elif event is InputEventMouseButton and event.pressed and Input.mouse_mode == Input.MOUSE_MODE_VISIBLE:
-		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	elif event is InputEventMouseButton and event.pressed:
+		if Input.mouse_mode == Input.MOUSE_MODE_VISIBLE:
+			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+		elif event.is_action_pressed("fire"):
+			_fire()
+
+func _fire() -> void:
+	var from := camera.global_transform.origin
+	var to := from + camera.global_transform.basis * Vector3(0.0, 0.0, -FIRE_RANGE)
+
+	var query := PhysicsRayQueryParameters3D.create(from, to)
+	query.exclude = [self]
+
+	var result := get_world_3d().direct_space_state.intersect_ray(query)
+	if result and result.collider.has_method("take_damage"):
+		result.collider.take_damage(FIRE_DAMAGE)
 
 func _physics_process(delta: float) -> void:
 	if not is_on_floor():

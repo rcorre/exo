@@ -1,6 +1,7 @@
-[gd_scene load_steps=11 format=3]
+[gd_scene load_steps=12 format=3]
 
 [ext_resource type="PackedScene" path="res://player/player.tscn" id="1"]
+[ext_resource type="PackedScene" path="res://enemies/enemy.tscn" id="2"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_1"]
 
@@ -85,3 +86,6 @@ surface_material_override/0 = SubResource("StandardMaterial3D_crate")
 
 [node name="Player" parent="." instance=ExtResource("1")]
 position = Vector3(0, 0.1, 0)
+
+[node name="Enemy" parent="." instance=ExtResource("2")]
+position = Vector3(0, 0, -10)
