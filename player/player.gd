@@ -8,10 +8,18 @@ const PITCH_LIMIT := deg_to_rad(89.0)
 const FIRE_RANGE := 100.0
 const FIRE_DAMAGE := 25
 
+const BASE_SPREAD_DEG := 0.5
+const MAX_SPREAD_DEG := 8.0
+const MOVE_BLOOM_DEG := 4.0
+const FIRE_BLOOM_DEG := 3.0
+const BLOOM_DECAY_DEG := 6.0
+
 @onready var head: Node3D = $Head
 @onready var camera: Camera3D = $Head/Camera3D
+@onready var reticle: Control = $HUD/Reticle
 
 var gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
+var recoil_bloom_deg: float = 0.0
 
 func _ready() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
@@ -30,8 +38,18 @@ func _unhandled_input(event: InputEvent) -> void:
 			_fire()
 
 func _fire() -> void:
+	var basis := camera.global_transform.basis
+	var forward := -basis.z
+
+	var spread_rad := deg_to_rad(_current_spread_deg())
+	var angle := randf() * TAU
+	var radius := sqrt(randf()) * tan(spread_rad)
+	var direction := (forward + basis.x * radius * cos(angle) + basis.y * radius * sin(angle)).normalized()
+
+	recoil_bloom_deg = min(recoil_bloom_deg + FIRE_BLOOM_DEG, MAX_SPREAD_DEG)
+
 	var from := camera.global_transform.origin
-	var to := from + camera.global_transform.basis * Vector3(0.0, 0.0, -FIRE_RANGE)
+	var to := from + direction * FIRE_RANGE
 
 	var query := PhysicsRayQueryParameters3D.create(from, to)
 	query.exclude = [self]
@@ -39,6 +57,11 @@ func _fire() -> void:
 	var result := get_world_3d().direct_space_state.intersect_ray(query)
 	if result and result.collider.has_method("take_damage"):
 		result.collider.take_damage(FIRE_DAMAGE)
+
+func _current_spread_deg() -> float:
+	var horizontal_speed := Vector2(velocity.x, velocity.z).length()
+	var move_bloom: float = MOVE_BLOOM_DEG * clamp(horizontal_speed / SPEED, 0.0, 1.0)
+	return clamp(BASE_SPREAD_DEG + move_bloom + recoil_bloom_deg, BASE_SPREAD_DEG, MAX_SPREAD_DEG)
 
 func _physics_process(delta: float) -> void:
 	if not is_on_floor():
@@ -56,3 +79,6 @@ func _physics_process(delta: float) -> void:
 	velocity.z = horizontal_velocity.z
 
 	move_and_slide()
+
+	recoil_bloom_deg = move_toward(recoil_bloom_deg, 0.0, BLOOM_DECAY_DEG * delta)
+	reticle.spread_ratio = (_current_spread_deg() - BASE_SPREAD_DEG) / (MAX_SPREAD_DEG - BASE_SPREAD_DEG)
