@@ -89,3 +89,4 @@ position = Vector3(0, 0.1, 0)
 
 [node name="Enemy" parent="." instance=ExtResource("2")]
 position = Vector3(0, 0, -10)
+rotation_degrees = Vector3(0, 180, 0)

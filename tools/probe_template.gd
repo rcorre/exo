@@ -26,7 +26,7 @@ func _run() -> void:
 	await physics_frame
 
 	var player: CharacterBody3D = arena.get_node("Player")
-	var enemy: StaticBody3D = arena.get_node("Enemy")
+	var enemy: CharacterBody3D = arena.get_node("Enemy")
 	var camera: Camera3D = player.get_node("Head/Camera3D")
 
 	# Positive control: aim directly at the enemy with the correct forward
