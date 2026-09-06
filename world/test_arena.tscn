@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3]
+[gd_scene format=3 uid="uid://cdqvbmvf1vdqp"]
 
 [ext_resource type="PackedScene" path="res://player/player.tscn" id="1"]
 [ext_resource type="PackedScene" path="res://enemies/enemy.tscn" id="2"]
@@ -33,60 +33,57 @@ size = Vector3(2, 2, 2)
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_crate"]
 albedo_color = Color(0.55, 0.4, 0.25, 1)
 
-[node name="TestArena" type="Node3D"]
+[node name="TestArena" type="Node3D" unique_id=1207197764]
 
-[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=732336166]
 environment = SubResource("Environment_1")
 
-[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
-rotation_degrees = Vector3(-45, -30, 0)
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=1046133947]
+transform = Transform3D(0.8660254, 0.35355338, -0.35355338, 0, 0.70710677, 0.70710677, 0.5, -0.6123724, 0.6123724, 0, 0, 0)
 shadow_enabled = true
 
-[node name="Floor" type="StaticBody3D" parent="."]
-position = Vector3(0, -0.5, 0)
+[node name="Floor" type="StaticBody3D" parent="." unique_id=721344353]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Floor"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Floor" unique_id=1825842498]
 shape = SubResource("BoxShape3D_floor")
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="Floor"]
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Floor" unique_id=1911848582]
 mesh = SubResource("BoxMesh_floor")
 surface_material_override/0 = SubResource("StandardMaterial3D_floor")
 
-[node name="Crate1" type="StaticBody3D" parent="."]
-position = Vector3(6, 1, 4)
+[node name="Crate1" type="StaticBody3D" parent="." unique_id=1550324261]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 1, 4)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Crate1"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Crate1" unique_id=1104414869]
 shape = SubResource("BoxShape3D_crate")
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="Crate1"]
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Crate1" unique_id=1738405100]
 mesh = SubResource("BoxMesh_crate")
 surface_material_override/0 = SubResource("StandardMaterial3D_crate")
 
-[node name="Crate2" type="StaticBody3D" parent="."]
-position = Vector3(-5, 1, 6)
-rotation_degrees = Vector3(0, 20, 0)
+[node name="Crate2" type="StaticBody3D" parent="." unique_id=504712975]
+transform = Transform3D(0.9396926, 0, 0.34202012, 0, 1, 0, -0.34202012, 0, 0.9396926, -5, 1, 6)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Crate2"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Crate2" unique_id=1893113961]
 shape = SubResource("BoxShape3D_crate")
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="Crate2"]
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Crate2" unique_id=1598206486]
 mesh = SubResource("BoxMesh_crate")
 surface_material_override/0 = SubResource("StandardMaterial3D_crate")
 
-[node name="Crate3" type="StaticBody3D" parent="."]
-position = Vector3(2, 1, -8)
-rotation_degrees = Vector3(0, -35, 0)
+[node name="Crate3" type="StaticBody3D" parent="." unique_id=308076177]
+transform = Transform3D(0.81915206, 0, -0.57357645, 0, 1, 0, 0.57357645, 0, 0.81915206, 2, 1, -8)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Crate3"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Crate3" unique_id=1315601538]
 shape = SubResource("BoxShape3D_crate")
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="Crate3"]
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Crate3" unique_id=853064416]
 mesh = SubResource("BoxMesh_crate")
 surface_material_override/0 = SubResource("StandardMaterial3D_crate")
 
-[node name="Player" parent="." instance=ExtResource("1")]
-position = Vector3(0, 0.1, 0)
+[node name="Player" parent="." unique_id=407313818 instance=ExtResource("1")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, 0)
 
-[node name="Enemy" parent="." instance=ExtResource("2")]
-position = Vector3(0, 0, -10)
-rotation_degrees = Vector3(0, 180, 0)
+[node name="Enemy" parent="." unique_id=1277205576 instance=ExtResource("2")]
+transform = Transform3D(0.17191774, 0, 0.9851113, 0, 1, 0, -0.9851113, 0, 0.17191774, 0, 0, -10)

@@ -8,6 +8,9 @@ const AGGRO_GAIN_TIME := 0.5
 const AGGRO_DECAY_TIME := 10.0
 const CHASE_SPEED := 3.0
 
+const HEARING_RANGE := 12.0
+const AUDIO_AGGRO_TIME := 3.0
+
 var health: int
 var aggro: float = 0.0
 var is_chasing: bool = false
@@ -25,9 +28,12 @@ func _physics_process(delta: float) -> void:
 
 	var player := _get_player()
 	var can_see := player != null and _can_see_player(player)
+	var audio_gain_rate := _audio_gain_rate(player) if player else 0.0
 
 	if can_see:
 		aggro = min(aggro + delta / AGGRO_GAIN_TIME, 1.0)
+	elif audio_gain_rate > 0.0:
+		aggro = min(aggro + audio_gain_rate * delta, 1.0)
 	else:
 		aggro = max(aggro - delta / AGGRO_DECAY_TIME, 0.0)
 
@@ -69,6 +75,15 @@ func _can_see_player(player: Node3D) -> bool:
 	query.exclude = [self]
 	var result := get_world_3d().direct_space_state.intersect_ray(query)
 	return result.is_empty() or result.collider == player
+
+func _audio_gain_rate(player: Node3D) -> float:
+	var distance := global_position.distance_to(player.global_position)
+	var distance_factor: float = clamp(1.0 - distance / HEARING_RANGE, 0.0, 1.0)
+
+	var horizontal_speed := Vector2(player.velocity.x, player.velocity.z).length()
+	var speed_factor: float = clamp(horizontal_speed / float(player.SPEED), 0.0, 1.0)
+
+	return distance_factor * speed_factor / AUDIO_AGGRO_TIME
 
 func _chase(player: Node3D) -> void:
 	var to_player := player.global_position - global_position
