@@ -1,5 +1,7 @@
 extends CharacterBody3D
 
+@export var max_health: int = 100
+
 const SPEED := 6.0
 const ACCEL := 20.0
 const DECEL := 35.0
@@ -32,7 +34,9 @@ const BULLET_TRAIL_SCENE := preload("res://weapons/bullet_trail.tscn")
 @onready var head: Node3D = $Head
 @onready var camera: Camera3D = $Head/Camera3D
 @onready var reticle: Control = $HUD/Reticle
+@onready var health_label: Label = $HUD/HealthLabel
 
+var health: int
 var gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
 var recoil_bloom_deg: float = 0.0
 var is_crouched: bool = false
@@ -41,6 +45,7 @@ var aim_progress: float = 0.0
 var is_sprinting: bool = false
 var sprint_progress: float = 0.0
 var sprint_lockout_remaining: float = 0.0
+var is_dead: bool = false
 
 var _stand_head_y: float
 var _base_fov: float
@@ -51,8 +56,28 @@ func _ready() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	_stand_head_y = head.position.y
 	_base_fov = camera.fov
+	health = max_health
+	_update_health_label()
+
+func take_damage(amount: int) -> void:
+	if is_dead:
+		return
+	health = max(health - amount, 0)
+	_update_health_label()
+	if health <= 0:
+		die()
+
+func die() -> void:
+	is_dead = true
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	_update_health_label()
+
+func _update_health_label() -> void:
+	health_label.text = "HP %d/%d" % [health, max_health] if not is_dead else "YOU DIED"
 
 func _unhandled_input(event: InputEvent) -> void:
+	if is_dead:
+		return
 	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		rotate_y(-event.relative.x * MOUSE_SENSITIVITY)
 		head.rotate_x(-event.relative.y * MOUSE_SENSITIVITY)
@@ -119,6 +144,12 @@ func _current_spread_deg() -> float:
 func _physics_process(delta: float) -> void:
 	if not is_on_floor():
 		velocity.y -= gravity * delta
+
+	if is_dead:
+		velocity.x = 0.0
+		velocity.z = 0.0
+		move_and_slide()
+		return
 
 	var input_dir := Input.get_vector("move_left", "move_right", "move_forward", "move_back")
 	var direction := (transform.basis * Vector3(input_dir.x, 0.0, input_dir.y)).normalized()

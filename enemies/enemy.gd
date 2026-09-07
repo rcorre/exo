@@ -7,13 +7,30 @@ const VISION_HALF_ANGLE_DEG := 50.0
 const AGGRO_GAIN_TIME := 0.5
 const AGGRO_DECAY_TIME := 10.0
 const CHASE_SPEED := 3.0
+const MIN_CHASE_DISTANCE := 5.0
 
 const HEARING_RANGE := 12.0
 const AUDIO_AGGRO_TIME := 3.0
 
+const DECISION_INTERVAL := 1.5
+const STOP_DECISION_MIN_DIST := MIN_CHASE_DISTANCE
+const STOP_DECISION_MAX_DIST := 10.0
+
+const FIRE_RANGE := 20.0
+const FIRE_DAMAGE := 10
+const FIRE_COOLDOWN := 1.2
+const BASE_SPREAD_DEG := 6.0
+const MAX_SPREAD_DEG := 16.0
+const FIRE_BLOOM_DEG := 4.0
+const BLOOM_DECAY_DEG := 8.0
+
 var health: int
 var aggro: float = 0.0
 var is_chasing: bool = false
+var is_stopped: bool = false
+var decision_timer: float = 0.0
+var fire_cooldown_remaining: float = 0.0
+var recoil_bloom_deg: float = 0.0
 
 var gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
 
@@ -45,8 +62,16 @@ func _physics_process(delta: float) -> void:
 		is_chasing = false
 
 	if is_chasing and player:
-		_chase(player)
+		_update_combat_decision(player, can_see, delta)
+		if is_stopped and can_see:
+			velocity.x = 0.0
+			velocity.z = 0.0
+			_aim_at(player)
+			_update_fire(player, delta)
+		else:
+			_chase(player)
 	else:
+		is_stopped = false
 		velocity.x = 0.0
 		velocity.z = 0.0
 
@@ -54,11 +79,69 @@ func _physics_process(delta: float) -> void:
 
 	_update_debug_label()
 
+func _update_combat_decision(player: Node3D, can_see: bool, delta: float) -> void:
+	decision_timer -= delta
+	if decision_timer > 0.0:
+		return
+	decision_timer = DECISION_INTERVAL
+
+	if not can_see:
+		is_stopped = false
+		return
+
+	var distance := global_position.distance_to(player.global_position)
+	var stop_chance: float = clamp(
+		1.0 - (distance - STOP_DECISION_MIN_DIST) / (STOP_DECISION_MAX_DIST - STOP_DECISION_MIN_DIST),
+		0.0, 1.0
+	)
+	is_stopped = randf() < stop_chance
+
+func _update_fire(player: Node3D, delta: float) -> void:
+	recoil_bloom_deg = move_toward(recoil_bloom_deg, 0.0, BLOOM_DECAY_DEG * delta)
+	fire_cooldown_remaining = max(fire_cooldown_remaining - delta, 0.0)
+	if fire_cooldown_remaining <= 0.0:
+		_fire(player)
+		fire_cooldown_remaining = FIRE_COOLDOWN
+
+func _aim_at(player: Node3D) -> void:
+	var to_player := player.global_position - global_position
+	to_player.y = 0.0
+	if to_player.length() > 0.01:
+		look_at(global_position + to_player.normalized(), Vector3.UP)
+
+func _fire(player: Node3D) -> void:
+	var eye_pos := global_position + Vector3.UP * 1.5
+	var target_pos := player.global_position + Vector3.UP * 0.9
+	var forward := (target_pos - eye_pos).normalized()
+
+	var right := forward.cross(Vector3.UP).normalized()
+	if right.length_squared() < 0.0001:
+		right = Vector3.RIGHT
+	var up := right.cross(forward).normalized()
+
+	var spread_rad := deg_to_rad(_current_spread_deg())
+	var angle := randf() * TAU
+	var radius := sqrt(randf()) * tan(spread_rad)
+	var direction := (forward + right * radius * cos(angle) + up * radius * sin(angle)).normalized()
+
+	recoil_bloom_deg = min(recoil_bloom_deg + FIRE_BLOOM_DEG, MAX_SPREAD_DEG)
+
+	var to := eye_pos + direction * FIRE_RANGE
+	var query := PhysicsRayQueryParameters3D.create(eye_pos, to)
+	query.exclude = [self]
+	var result := get_world_3d().direct_space_state.intersect_ray(query)
+	if result and result.collider.has_method("take_damage"):
+		result.collider.take_damage(FIRE_DAMAGE)
+
+func _current_spread_deg() -> float:
+	return clamp(BASE_SPREAD_DEG + recoil_bloom_deg, 0.0, MAX_SPREAD_DEG)
+
 func _update_debug_label() -> void:
 	var has_something_to_show := health < max_health or aggro > 0.0
 	debug_label.visible = DebugFlags.enabled and has_something_to_show
 	if debug_label.visible:
-		debug_label.text = "HP %d/%d\nAggro %d%%" % [health, max_health, roundi(aggro * 100)]
+		var state := "STOPPED" if is_stopped else "CHASING" if is_chasing else "IDLE"
+		debug_label.text = "HP %d/%d\nAggro %d%%\n%s" % [health, max_health, roundi(aggro * 100), state]
 
 func _get_player() -> Node3D:
 	return get_tree().get_first_node_in_group("player")
@@ -98,11 +181,16 @@ func _audio_gain_rate(player: Node3D) -> float:
 func _chase(player: Node3D) -> void:
 	var to_player := player.global_position - global_position
 	to_player.y = 0.0
-	if to_player.length() > 0.01:
+	var distance := to_player.length()
+	if distance > 0.01:
 		var direction := to_player.normalized()
-		velocity.x = direction.x * CHASE_SPEED
-		velocity.z = direction.z * CHASE_SPEED
 		look_at(global_position + direction, Vector3.UP)
+		if distance > MIN_CHASE_DISTANCE:
+			velocity.x = direction.x * CHASE_SPEED
+			velocity.z = direction.z * CHASE_SPEED
+		else:
+			velocity.x = 0.0
+			velocity.z = 0.0
 
 func take_damage(amount: int) -> void:
 	health -= amount
