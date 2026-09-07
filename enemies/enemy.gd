@@ -17,6 +17,8 @@ var is_chasing: bool = false
 
 var gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
 
+@onready var debug_label: Label3D = $DebugLabel
+
 func _ready() -> void:
 	health = max_health
 
@@ -49,6 +51,14 @@ func _physics_process(delta: float) -> void:
 		velocity.z = 0.0
 
 	move_and_slide()
+
+	_update_debug_label()
+
+func _update_debug_label() -> void:
+	var has_something_to_show := health < max_health or aggro > 0.0
+	debug_label.visible = DebugFlags.enabled and has_something_to_show
+	if debug_label.visible:
+		debug_label.text = "HP %d/%d\nAggro %d%%" % [health, max_health, roundi(aggro * 100)]
 
 func _get_player() -> Node3D:
 	return get_tree().get_first_node_in_group("player")
