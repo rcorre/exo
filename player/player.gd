@@ -8,10 +8,14 @@ const PITCH_LIMIT := deg_to_rad(89.0)
 const CROUCH_HEIGHT_MULT := 0.5
 const CROUCH_SPEED_MULT := 0.5
 const CROUCH_TRANSITION_SPEED := 8.0
+const AIM_SPEED_MULT := 0.5
+const AIM_SPREAD_MULT := 0.4
+const AIM_ZOOM_MULT := 1.25
+const AIM_TRANSITION_SPEED := 5.0
 const FIRE_RANGE := 100.0
 const FIRE_DAMAGE := 25
 
-const BASE_SPREAD_DEG := 0.5
+const BASE_SPREAD_DEG := 3.0
 const MAX_SPREAD_DEG := 8.0
 const MOVE_BLOOM_DEG := 4.0
 const FIRE_BLOOM_DEG := 3.0
@@ -26,12 +30,16 @@ const BULLET_TRAIL_SCENE := preload("res://weapons/bullet_trail.tscn")
 var gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
 var recoil_bloom_deg: float = 0.0
 var is_crouched: bool = false
+var is_aiming: bool = false
+var aim_progress: float = 0.0
 
 var _stand_head_y: float
+var _base_fov: float
 
 func _ready() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	_stand_head_y = head.position.y
+	_base_fov = camera.fov
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
@@ -47,6 +55,8 @@ func _unhandled_input(event: InputEvent) -> void:
 			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 		elif event.is_action_pressed("fire"):
 			_fire()
+		elif event.is_action_pressed("aim"):
+			is_aiming = not is_aiming
 
 func _fire() -> void:
 	var basis := camera.global_transform.basis
@@ -82,7 +92,9 @@ func _spawn_trail(from: Vector3, to: Vector3) -> void:
 func _current_spread_deg() -> float:
 	var horizontal_speed := Vector2(velocity.x, velocity.z).length()
 	var move_bloom: float = MOVE_BLOOM_DEG * clamp(horizontal_speed / SPEED, 0.0, 1.0)
-	return clamp(BASE_SPREAD_DEG + move_bloom + recoil_bloom_deg, BASE_SPREAD_DEG, MAX_SPREAD_DEG)
+	var spread_deg := BASE_SPREAD_DEG + move_bloom + recoil_bloom_deg
+	spread_deg *= lerp(1.0, AIM_SPREAD_MULT, aim_progress)
+	return clamp(spread_deg, 0.0, MAX_SPREAD_DEG)
 
 func _physics_process(delta: float) -> void:
 	if not is_on_floor():
@@ -91,7 +103,11 @@ func _physics_process(delta: float) -> void:
 	var input_dir := Input.get_vector("move_left", "move_right", "move_forward", "move_back")
 	var direction := (transform.basis * Vector3(input_dir.x, 0.0, input_dir.y)).normalized()
 
-	var speed := SPEED * CROUCH_SPEED_MULT if is_crouched else SPEED
+	var speed := SPEED
+	if is_crouched:
+		speed *= CROUCH_SPEED_MULT
+	if is_aiming:
+		speed *= AIM_SPEED_MULT
 	var target_velocity := direction * speed
 	var horizontal_velocity := Vector3(velocity.x, 0.0, velocity.z)
 	var accel_rate := ACCEL if direction.length_squared() > 0.0 else DECEL
@@ -105,5 +121,8 @@ func _physics_process(delta: float) -> void:
 	var target_head_y := _stand_head_y * CROUCH_HEIGHT_MULT if is_crouched else _stand_head_y
 	head.position.y = move_toward(head.position.y, target_head_y, CROUCH_TRANSITION_SPEED * delta)
 
+	aim_progress = move_toward(aim_progress, 1.0 if is_aiming else 0.0, AIM_TRANSITION_SPEED * delta)
+	camera.fov = lerp(_base_fov, _base_fov / AIM_ZOOM_MULT, aim_progress)
+
 	recoil_bloom_deg = move_toward(recoil_bloom_deg, 0.0, BLOOM_DECAY_DEG * delta)
-	reticle.spread_ratio = (_current_spread_deg() - BASE_SPREAD_DEG) / (MAX_SPREAD_DEG - BASE_SPREAD_DEG)
+	reticle.spread_ratio = _current_spread_deg() / MAX_SPREAD_DEG
