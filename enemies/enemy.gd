@@ -70,7 +70,10 @@ func _physics_process(delta: float) -> void:
 	elif aggro <= 0.0:
 		is_chasing = false
 
-	if is_chasing and player:
+	if is_playing_reaction:
+		velocity.x = 0.0
+		velocity.z = 0.0
+	elif is_chasing and player:
 		_update_combat_decision(player, can_see, delta)
 		if is_stopped and can_see:
 			velocity.x = 0.0
