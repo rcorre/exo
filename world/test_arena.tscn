@@ -33,6 +33,42 @@ size = Vector3(2, 2, 2)
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_crate"]
 albedo_color = Color(0.55, 0.4, 0.25, 1)
 
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wall"]
+albedo_color = Color(0.45, 0.45, 0.5, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_wall_ew"]
+size = Vector3(0.5, 3, 40)
+
+[sub_resource type="BoxMesh" id="BoxMesh_wall_ew"]
+size = Vector3(0.5, 3, 40)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_wall_ns"]
+size = Vector3(40, 3, 0.5)
+
+[sub_resource type="BoxMesh" id="BoxMesh_wall_ns"]
+size = Vector3(40, 3, 0.5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_divide_a"]
+size = Vector3(24, 3, 0.5)
+
+[sub_resource type="BoxMesh" id="BoxMesh_divide_a"]
+size = Vector3(24, 3, 0.5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_divide_b"]
+size = Vector3(12, 3, 0.5)
+
+[sub_resource type="BoxMesh" id="BoxMesh_divide_b"]
+size = Vector3(12, 3, 0.5)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_cover"]
+albedo_color = Color(0.5, 0.48, 0.42, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_cover"]
+size = Vector3(3, 1.1, 0.5)
+
+[sub_resource type="BoxMesh" id="BoxMesh_cover"]
+size = Vector3(3, 1.1, 0.5)
+
 [node name="TestArena" type="Node3D" unique_id=1207197764]
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=732336166]
@@ -51,6 +87,66 @@ shape = SubResource("BoxShape3D_floor")
 [node name="MeshInstance3D" type="MeshInstance3D" parent="Floor" unique_id=1911848582]
 mesh = SubResource("BoxMesh_floor")
 surface_material_override/0 = SubResource("StandardMaterial3D_floor")
+
+[node name="WallWest" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -19.75, 1.5, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="WallWest"]
+shape = SubResource("BoxShape3D_wall_ew")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="WallWest"]
+mesh = SubResource("BoxMesh_wall_ew")
+surface_material_override/0 = SubResource("StandardMaterial3D_wall")
+
+[node name="WallEast" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19.75, 1.5, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="WallEast"]
+shape = SubResource("BoxShape3D_wall_ew")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="WallEast"]
+mesh = SubResource("BoxMesh_wall_ew")
+surface_material_override/0 = SubResource("StandardMaterial3D_wall")
+
+[node name="WallNorth" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, -19.75)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="WallNorth"]
+shape = SubResource("BoxShape3D_wall_ns")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="WallNorth"]
+mesh = SubResource("BoxMesh_wall_ns")
+surface_material_override/0 = SubResource("StandardMaterial3D_wall")
+
+[node name="WallSouth" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 19.75)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="WallSouth"]
+shape = SubResource("BoxShape3D_wall_ns")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="WallSouth"]
+mesh = SubResource("BoxMesh_wall_ns")
+surface_material_override/0 = SubResource("StandardMaterial3D_wall")
+
+[node name="DividingWallA" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 1.5, -5)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="DividingWallA"]
+shape = SubResource("BoxShape3D_divide_a")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="DividingWallA"]
+mesh = SubResource("BoxMesh_divide_a")
+surface_material_override/0 = SubResource("StandardMaterial3D_wall")
+
+[node name="DividingWallB" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 1.5, -5)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="DividingWallB"]
+shape = SubResource("BoxShape3D_divide_b")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="DividingWallB"]
+mesh = SubResource("BoxMesh_divide_b")
+surface_material_override/0 = SubResource("StandardMaterial3D_wall")
 
 [node name="Crate1" type="StaticBody3D" parent="." unique_id=1550324261]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 1, 4)
@@ -82,8 +178,48 @@ shape = SubResource("BoxShape3D_crate")
 mesh = SubResource("BoxMesh_crate")
 surface_material_override/0 = SubResource("StandardMaterial3D_crate")
 
+[node name="CoverLow1" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 0.55, 3)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="CoverLow1"]
+shape = SubResource("BoxShape3D_cover")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="CoverLow1"]
+mesh = SubResource("BoxMesh_cover")
+surface_material_override/0 = SubResource("StandardMaterial3D_cover")
+
+[node name="CoverLow2" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0.55, -1)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="CoverLow2"]
+shape = SubResource("BoxShape3D_cover")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="CoverLow2"]
+mesh = SubResource("BoxMesh_cover")
+surface_material_override/0 = SubResource("StandardMaterial3D_cover")
+
+[node name="CoverLow3" type="StaticBody3D" parent="."]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 0, 0.55, 12)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="CoverLow3"]
+shape = SubResource("BoxShape3D_cover")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="CoverLow3"]
+mesh = SubResource("BoxMesh_cover")
+surface_material_override/0 = SubResource("StandardMaterial3D_cover")
+
+[node name="CoverLow4" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14, 0.55, -2)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="CoverLow4"]
+shape = SubResource("BoxShape3D_cover")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="CoverLow4"]
+mesh = SubResource("BoxMesh_cover")
+surface_material_override/0 = SubResource("StandardMaterial3D_cover")
+
 [node name="Player" parent="." unique_id=407313818 instance=ExtResource("1")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, 0)
 
 [node name="Enemy" parent="." unique_id=1277205576 instance=ExtResource("2")]
-transform = Transform3D(0.17191774, 0, 0.9851113, 0, 1, 0, -0.9851113, 0, 0.17191774, 0, 0, -10)
+transform = Transform3D(-0.5299193, 0, 0.8480481, 0, 1, 0, -0.8480481, 0, -0.5299193, 10, 0, 10)
