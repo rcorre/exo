@@ -23,6 +23,15 @@ const RETICLE_FADE_SPEED := 4.0
 const FIRE_RANGE := 100.0
 const FIRE_DAMAGE := 25
 
+const LEAN_MAX_OFFSET := 0.5
+const LEAN_TRANSITION_SPEED := 3.5
+const LEAN_ROLL_DEG := 8.0
+const LEAN_CLEARANCE := 1.0
+const LEAN_PROBE_RADIUS := 0.25
+const PEEK_HEIGHT := 0.5
+const PEEK_TRANSITION_SPEED := 2.0
+const LEAN_SIGHTLINE_RANGE := 5.0
+
 const BASE_SPREAD_DEG := 3.0
 const MAX_SPREAD_DEG := 8.0
 const MOVE_BLOOM_DEG := 4.0
@@ -35,6 +44,7 @@ const BULLET_TRAIL_SCENE := preload("res://weapons/bullet_trail.tscn")
 @onready var camera: Camera3D = $Head/Camera3D
 @onready var reticle: Control = $HUD/Reticle
 @onready var health_label: Label = $HUD/HealthLabel
+@onready var _probe_shape := SphereShape3D.new()
 
 var health: int
 var gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
@@ -46,6 +56,8 @@ var is_sprinting: bool = false
 var sprint_progress: float = 0.0
 var sprint_lockout_remaining: float = 0.0
 var is_dead: bool = false
+var lean_amount: float = 0.0
+var peek_amount: float = 0.0
 
 var _stand_head_y: float
 var _base_fov: float
@@ -56,6 +68,7 @@ func _ready() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	_stand_head_y = head.position.y
 	_base_fov = camera.fov
+	_probe_shape.radius = LEAN_PROBE_RADIUS
 	health = max_health
 	_update_health_label()
 
@@ -136,6 +149,84 @@ func _spawn_trail(from: Vector3, to: Vector3) -> void:
 	get_tree().current_scene.add_child(trail)
 	trail.setup(from, to)
 
+func _has_forward_clearance(from: Vector3, forward: Vector3, distance: float) -> bool:
+	var query := PhysicsRayQueryParameters3D.create(from, from + forward * distance)
+	query.exclude = [self]
+	return not get_world_3d().direct_space_state.intersect_ray(query)
+
+func _offset_is_clear(from: Vector3, offset: Vector3) -> bool:
+	var params := PhysicsShapeQueryParameters3D.new()
+	params.shape = _probe_shape
+	params.transform = Transform3D(Basis(), from)
+	params.motion = offset
+	params.exclude = [self]
+	params.collision_mask = collision_mask
+	var result := get_world_3d().direct_space_state.cast_motion(params)
+	return result.is_empty() or result[0] >= 0.999
+
+# Base eye height for crouched/standing, excluding any in-progress peek --
+# lean and peek must each judge "am I blocked" off a height the other one
+# isn't actively moving, or one finishing its transition flips the other's
+# blocked check mid-motion and cancels it.
+func _eye_origin() -> Vector3:
+	var eye_y := _stand_head_y * CROUCH_HEIGHT_MULT if is_crouched else _stand_head_y
+	return global_transform.origin + Vector3.UP * eye_y
+
+# Distance along `direction` (up to max_offset) needed before both the
+# probe shape can physically get there and the forward ray is clear -- INF
+# if max_offset isn't enough. The forward check here uses LEAN_SIGHTLINE_RANGE,
+# not LEAN_CLEARANCE: LEAN_CLEARANCE only gates whether we're close enough to
+# a wall to bother leaning at all. At a diagonal, a ray that short can slip
+# past the wall's near edge without reaching its face, reporting "clear" when
+# the same wall still blocks the shot a bit further out. LEAN_SIGHTLINE_RANGE
+# is deliberately not the weapon's full FIRE_RANGE -- in a bounded level a
+# forward ray almost always hits some far wall eventually, which would make
+# leaning look "still blocked" everywhere; it only needs to see past the
+# nearby corner.
+func _min_clear_distance(origin: Vector3, direction: Vector3, max_offset: float, forward: Vector3) -> float:
+	if not (_offset_is_clear(origin, direction * max_offset) and _has_forward_clearance(origin + direction * max_offset, forward, LEAN_SIGHTLINE_RANGE)):
+		return INF
+	var lo := 0.0
+	var hi := max_offset
+	for i in 8:
+		var mid := (lo + hi) * 0.5
+		if _offset_is_clear(origin, direction * mid) and _has_forward_clearance(origin + direction * mid, forward, LEAN_SIGHTLINE_RANGE):
+			hi = mid
+		else:
+			lo = mid
+	return hi
+
+func _update_lean_and_peek(delta: float) -> void:
+	var lean_target := 0.0
+	var peek_target := 0.0
+	if is_aiming and not is_sprinting:
+		var origin := _eye_origin()
+		var forward := -head.global_transform.basis.z
+		if not _has_forward_clearance(origin, forward, LEAN_CLEARANCE):
+			var right := head.global_transform.basis.x
+			var right_dist := _min_clear_distance(origin, right, LEAN_MAX_OFFSET, forward)
+			var left_dist := _min_clear_distance(origin, -right, LEAN_MAX_OFFSET, forward)
+			var lean_dist := right_dist
+			var lean_side := 1.0
+			if left_dist < right_dist:
+				lean_dist = left_dist
+				lean_side = -1.0
+
+			var peek_dist := INF
+			if is_crouched:
+				peek_dist = _min_clear_distance(origin, Vector3.UP, PEEK_HEIGHT, forward)
+
+			# Only one of lean/peek engages at a time -- whichever needs
+			# less movement to find a clear line.
+			if lean_dist < peek_dist:
+				lean_target = lean_side
+			elif peek_dist < INF:
+				peek_target = 1.0
+	lean_amount = move_toward(lean_amount, lean_target, LEAN_TRANSITION_SPEED * delta)
+	peek_amount = move_toward(peek_amount, peek_target, PEEK_TRANSITION_SPEED * delta)
+	camera.position.x = lean_amount * LEAN_MAX_OFFSET
+	camera.rotation.z = -lean_amount * deg_to_rad(LEAN_ROLL_DEG)
+
 func _current_spread_deg() -> float:
 	var horizontal_speed := Vector2(velocity.x, velocity.z).length()
 	var move_bloom: float = MOVE_BLOOM_DEG * clamp(horizontal_speed / SPEED, 0.0, 1.0)
@@ -172,7 +263,10 @@ func _physics_process(delta: float) -> void:
 
 	move_and_slide()
 
+	_update_lean_and_peek(delta)
+
 	var target_head_y := _stand_head_y * CROUCH_HEIGHT_MULT if is_crouched else _stand_head_y
+	target_head_y += peek_amount * PEEK_HEIGHT
 	head.position.y = move_toward(head.position.y, target_head_y, CROUCH_TRANSITION_SPEED * delta)
 
 	aim_progress = move_toward(aim_progress, 1.0 if is_aiming else 0.0, AIM_TRANSITION_SPEED * delta)
