@@ -24,10 +24,15 @@ const MAX_SPREAD_DEG := 16.0
 const FIRE_BLOOM_DEG := 4.0
 const BLOOM_DECAY_DEG := 8.0
 
+const HIT_STATES := [&"HitChest", &"HitHead"]
+const HIT_CLIPS := {&"HitChest": &"Hit_Chest", &"HitHead": &"Hit_Head"}
+
 var health: int
 var aggro: float = 0.0
 var is_chasing: bool = false
 var is_stopped: bool = false
+var is_dead: bool = false
+var is_playing_reaction: bool = false
 var decision_timer: float = 0.0
 var fire_cooldown_remaining: float = 0.0
 var recoil_bloom_deg: float = 0.0
@@ -35,9 +40,13 @@ var recoil_bloom_deg: float = 0.0
 var gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
 
 @onready var debug_label: Label3D = $DebugLabel
+@onready var animation_player: AnimationPlayer = $Model/AnimationPlayer
+@onready var animation_tree: AnimationTree = $AnimationTree
+@onready var playback: AnimationNodeStateMachinePlayback = animation_tree["parameters/playback"]
 
 func _ready() -> void:
 	health = max_health
+	playback.start(&"Idle")
 
 func _physics_process(delta: float) -> void:
 	if not is_on_floor():
@@ -78,6 +87,32 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 
 	_update_debug_label()
+	_update_locomotion_animation(can_see)
+
+# Crouch state exists in the AnimationTree state machine but nothing travels
+# to it yet, since enemies have no crouch/take-cover behavior (matches the
+# player, which also has no crouch behavior yet per player.gd).
+func _update_locomotion_animation(can_see: bool) -> void:
+	if is_playing_reaction:
+		return
+	if not is_chasing:
+		playback.travel(&"Idle")
+	elif is_stopped and can_see:
+		playback.travel(&"Aim")
+	else:
+		playback.travel(&"Move")
+
+# AnimationNodeStateMachineTransition's "Auto" advance mode fires as soon as
+# a transition becomes current, not when the source clip finishes playing -
+# so one-shot reactions (shoot, hit) travel back to their base state from
+# here, timed off the real clip length, instead of relying on the graph.
+func _play_reaction(state: StringName, clip: StringName, return_state: StringName) -> void:
+	is_playing_reaction = true
+	playback.travel(state)
+	await get_tree().create_timer(animation_player.get_animation(clip).length).timeout
+	is_playing_reaction = false
+	if not is_dead:
+		playback.travel(return_state)
 
 func _update_combat_decision(player: Node3D, can_see: bool, delta: float) -> void:
 	decision_timer -= delta
@@ -110,6 +145,8 @@ func _aim_at(player: Node3D) -> void:
 		look_at(global_position + to_player.normalized(), Vector3.UP)
 
 func _fire(player: Node3D) -> void:
+	_play_reaction(&"Shoot", &"Pistol_Shoot", &"Aim")
+
 	var eye_pos := global_position + Vector3.UP * 1.5
 	var target_pos := player.global_position + Vector3.UP * 0.9
 	var forward := (target_pos - eye_pos).normalized()
@@ -193,9 +230,18 @@ func _chase(player: Node3D) -> void:
 			velocity.z = 0.0
 
 func take_damage(amount: int) -> void:
+	if is_dead:
+		return
 	health -= amount
 	if health <= 0:
 		die()
+	else:
+		var hit_state: StringName = HIT_STATES.pick_random()
+		_play_reaction(hit_state, HIT_CLIPS[hit_state], &"Idle")
 
 func die() -> void:
+	is_dead = true
+	set_physics_process(false)
+	playback.travel(&"Death")
+	await get_tree().create_timer(animation_player.get_animation(&"Death01").length).timeout
 	queue_free()

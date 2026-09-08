@@ -1,17 +1,138 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=32 format=3]
 
 [ext_resource type="Script" path="res://enemies/enemy.gd" id="1"]
+[ext_resource type="PackedScene" uid="uid://wrv152lo3fc" path="res://assets/models/animations/UAL1_Standard.glb" id="2"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_1"]
 radius = 0.4
 height = 1.8
 
-[sub_resource type="CapsuleMesh" id="CapsuleMesh_1"]
-radius = 0.4
-height = 1.8
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_idle"]
+animation = &"Idle"
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1"]
-albedo_color = Color(0.8, 0.15, 0.15, 1)
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_move"]
+animation = &"Jog_Fwd"
+
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_crouch"]
+animation = &"Crouch_Idle"
+
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_aim"]
+animation = &"Pistol_Idle"
+
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_shoot"]
+animation = &"Pistol_Shoot"
+
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_hit_chest"]
+animation = &"Hit_Chest"
+
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_hit_head"]
+animation = &"Hit_Head"
+
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_death"]
+animation = &"Death01"
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="Transition_idle_move"]
+advance_mode = 0
+xfade_time = 0.25
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="Transition_move_idle"]
+advance_mode = 0
+xfade_time = 0.25
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="Transition_idle_crouch"]
+advance_mode = 0
+xfade_time = 0.25
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="Transition_crouch_idle"]
+advance_mode = 0
+xfade_time = 0.25
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="Transition_move_aim"]
+advance_mode = 0
+xfade_time = 0.2
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="Transition_aim_move"]
+advance_mode = 0
+xfade_time = 0.2
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="Transition_aim_shoot"]
+advance_mode = 0
+xfade_time = 0.05
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="Transition_shoot_aim"]
+advance_mode = 0
+xfade_time = 0.15
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="Transition_idle_hitchest"]
+advance_mode = 0
+xfade_time = 0.05
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="Transition_idle_hithead"]
+advance_mode = 0
+xfade_time = 0.05
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="Transition_move_hitchest"]
+advance_mode = 0
+xfade_time = 0.05
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="Transition_move_hithead"]
+advance_mode = 0
+xfade_time = 0.05
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="Transition_aim_hitchest"]
+advance_mode = 0
+xfade_time = 0.05
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="Transition_aim_hithead"]
+advance_mode = 0
+xfade_time = 0.05
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="Transition_hitchest_idle"]
+advance_mode = 0
+xfade_time = 0.2
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="Transition_hithead_idle"]
+advance_mode = 0
+xfade_time = 0.2
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="Transition_idle_death"]
+advance_mode = 0
+xfade_time = 0.15
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="Transition_move_death"]
+advance_mode = 0
+xfade_time = 0.15
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="Transition_aim_death"]
+advance_mode = 0
+xfade_time = 0.15
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="Transition_hitchest_death"]
+advance_mode = 0
+xfade_time = 0.15
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="Transition_hithead_death"]
+advance_mode = 0
+xfade_time = 0.15
+
+[sub_resource type="AnimationNodeStateMachine" id="AnimationNodeStateMachine_1"]
+states/Idle/node = SubResource("AnimationNodeAnimation_idle")
+states/Idle/position = Vector2(200, 80)
+states/Move/node = SubResource("AnimationNodeAnimation_move")
+states/Move/position = Vector2(420, 80)
+states/Crouch/node = SubResource("AnimationNodeAnimation_crouch")
+states/Crouch/position = Vector2(200, 220)
+states/Aim/node = SubResource("AnimationNodeAnimation_aim")
+states/Aim/position = Vector2(640, 80)
+states/Shoot/node = SubResource("AnimationNodeAnimation_shoot")
+states/Shoot/position = Vector2(860, 80)
+states/HitChest/node = SubResource("AnimationNodeAnimation_hit_chest")
+states/HitChest/position = Vector2(420, 220)
+states/HitHead/node = SubResource("AnimationNodeAnimation_hit_head")
+states/HitHead/position = Vector2(420, 340)
+states/Death/node = SubResource("AnimationNodeAnimation_death")
+states/Death/position = Vector2(640, 280)
+transitions = [&"Idle", &"Move", SubResource("Transition_idle_move"), &"Move", &"Idle", SubResource("Transition_move_idle"), &"Idle", &"Crouch", SubResource("Transition_idle_crouch"), &"Crouch", &"Idle", SubResource("Transition_crouch_idle"), &"Move", &"Aim", SubResource("Transition_move_aim"), &"Aim", &"Move", SubResource("Transition_aim_move"), &"Aim", &"Shoot", SubResource("Transition_aim_shoot"), &"Shoot", &"Aim", SubResource("Transition_shoot_aim"), &"Idle", &"HitChest", SubResource("Transition_idle_hitchest"), &"Idle", &"HitHead", SubResource("Transition_idle_hithead"), &"Move", &"HitChest", SubResource("Transition_move_hitchest"), &"Move", &"HitHead", SubResource("Transition_move_hithead"), &"Aim", &"HitChest", SubResource("Transition_aim_hitchest"), &"Aim", &"HitHead", SubResource("Transition_aim_hithead"), &"HitChest", &"Idle", SubResource("Transition_hitchest_idle"), &"HitHead", &"Idle", SubResource("Transition_hithead_idle"), &"Idle", &"Death", SubResource("Transition_idle_death"), &"Move", &"Death", SubResource("Transition_move_death"), &"Aim", &"Death", SubResource("Transition_aim_death"), &"HitChest", &"Death", SubResource("Transition_hitchest_death"), &"HitHead", &"Death", SubResource("Transition_hithead_death")]
 
 [node name="Enemy" type="CharacterBody3D"]
 script = ExtResource("1")
@@ -20,10 +141,13 @@ script = ExtResource("1")
 position = Vector3(0, 0.9, 0)
 shape = SubResource("CapsuleShape3D_1")
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
-position = Vector3(0, 0.9, 0)
-mesh = SubResource("CapsuleMesh_1")
-surface_material_override/0 = SubResource("StandardMaterial3D_1")
+[node name="Model" parent="." instance=ExtResource("2")]
+
+[node name="AnimationTree" type="AnimationTree" parent="."]
+tree_root = SubResource("AnimationNodeStateMachine_1")
+anim_player = NodePath("../Model/AnimationPlayer")
+active = true
+process_callback = 0
 
 [node name="DebugLabel" type="Label3D" parent="."]
 visible = false
