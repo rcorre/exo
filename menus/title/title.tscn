@@ -1,0 +1,60 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://menus/title/quit_button.gd" id="1"]
+[ext_resource type="Script" path="res://menus/title/play_button.gd" id="2"]
+[ext_resource type="Script" path="res://menus/title/title.gd" id="3"]
+[ext_resource type="PackedScene" path="res://menus/settings_menu.tscn" id="4"]
+[ext_resource type="Script" path="res://menus/tab_select_button.gd" id="5"]
+
+[node name="Title" type="TabContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+current_tab = 0
+tabs_visible = false
+script = ExtResource("3")
+
+[node name="TitleMenu" type="VBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 32
+metadata/_tab_index = 0
+
+[node name="Spacer" type="Control" parent="TitleMenu"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="TitleMenu"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 48
+text = "EXO"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="TitleMenu"]
+layout_mode = 2
+
+[node name="PlayButton" type="Button" parent="TitleMenu"]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 32
+text = "Play"
+script = ExtResource("2")
+
+[node name="OptionsButton" type="Button" parent="TitleMenu"]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 32
+text = "Options"
+script = ExtResource("5")
+tab = 1
+
+[node name="QuitButton" type="Button" parent="TitleMenu"]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 32
+text = "Quit"
+script = ExtResource("1")
+
+[node name="SettingsMenu" parent="." instance=ExtResource("4")]
+visible = false
+layout_mode = 2
+metadata/_tab_index = 1

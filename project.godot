@@ -13,11 +13,13 @@ config_version=5
 config/name="Exo"
 config/features=PackedStringArray("4.7", "Forward Plus")
 config/icon="res://icon.svg"
-run/main_scene="res://world/test_arena.tscn"
+run/main_scene="res://menus/title/title.tscn"
 
 [autoload]
 
 DebugFlags="*res://debug/debug_flags.gd"
+Settings="*res://settings/settings.gd"
+Bindings="*res://bindings/bindings.gd"
 
 [input]
 
