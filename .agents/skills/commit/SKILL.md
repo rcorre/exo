@@ -1,13 +1,6 @@
 ---
 name: commit
-description: Create a git commit for this project with a single-line imperative summary. Use whenever you need to make a commit in this repo.
-model: haiku
-allowed-tools:
-  - Bash(git diff *)
-  - Bash(git log *)
-  - Bash(git status *)
-  - Bash(git commit *)
-  - Bash(git add *)
+description: Create a git commit for currently staged changes with a single-line imperative summary. Use when asked to commit changes in this repo.
 ---
 
 Create a git commit for the currently staged changes.
