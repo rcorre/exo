@@ -128,6 +128,11 @@ Keep starts on the floor, clear of walls/obstacles and other actors.
 
 ## Adding the real positioning algorithm
 
+Read [`enemies/COVER_PLAN.md`](../../enemies/COVER_PLAN.md) first for the user’s
+runtime-first/no-authored-slots/no-plugins decisions, open design choices,
+gameplay integration requirements, and navigation pitfalls found while building
+this harness.
+
 A policy is a `RefCounted` script with this interface:
 
 ```gdscript

@@ -62,7 +62,7 @@ tools/check.sh tests/positioning/run.gd --fixed-fps 60  # headless fixtures + JS
 godot res://tests/positioning/lab.tscn                 # top-down interactive fixture editor
 ```
 
-Its current navigation-only baseline is a harness positive control, not cover AI. When adding cover selection, share the gameplay algorithm with the harness rather than implementing a test-only copy. Expected destination regions are human-authored and must never be used to drive enemy movement.
+Its current navigation-only baseline is a harness positive control, not cover AI. When adding cover selection, first read `enemies/COVER_PLAN.md` for the agreed constraints and implementation handoff. Share the gameplay algorithm with the harness rather than implementing a test-only copy. Expected destination regions are human-authored and must never be used to drive enemy movement.
 
 ## Player controller
 
