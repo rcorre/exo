@@ -1,0 +1,12 @@
+{
+	"name": "Moving threat — navigation baseline",
+	"description": "After initial arrival, the player relocates and both enemies must update their destinations.",
+	"duration_seconds": 7,
+	"player": [0, 0],
+	"player_moves": [{"at_seconds": 3, "position": [2, 0]}],
+	"enemies": [
+		{"id": "E1", "start": [-9, 0], "expected": [{"center": [-3, 0], "radius": 0.6}]},
+		{"id": "E2", "start": [9, 0], "expected": [{"center": [7, 0], "radius": 0.6}]}
+	],
+	"obstacles": []
+}

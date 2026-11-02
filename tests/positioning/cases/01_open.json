@@ -1,0 +1,11 @@
+{
+	"name": "Open ground — navigation baseline",
+	"description": "Positive control: two enemies approach their player-relative destinations.",
+	"duration_seconds": 5,
+	"player": [0, 0],
+	"enemies": [
+		{"id": "E1", "start": [-9, 0], "expected": [{"center": [-5, 0], "radius": 0.6}]},
+		{"id": "E2", "start": [9, 0], "expected": [{"center": [5, 0], "radius": 0.6}]}
+	],
+	"obstacles": []
+}

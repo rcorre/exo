@@ -55,7 +55,14 @@ tools/screenshot.sh res://world/test_arena.tscn /tmp/shot.png 30
 
 This opens an actual window (needs a display, not `--headless`) and saves a PNG — read it back to check the result instead of asking the user to look.
 
-There is no test framework installed yet (no GUT/gdUnit4). Reach for the tools above first; only introduce a real test suite once a specific system (e.g. damage/ammo/objectives) stops changing shape and a bug has bitten twice.
+There is no external test framework installed (no GUT/gdUnit4). Reach for the tools above for general gameplay probes. The dependency-free positioning harness lives in `tests/positioning/` (see its `README.md`):
+
+```
+tools/check.sh tests/positioning/run.gd --fixed-fps 60  # headless fixtures + JSON/SVG reports
+godot res://tests/positioning/lab.tscn                 # top-down interactive fixture editor
+```
+
+Its current navigation-only baseline is a harness positive control, not cover AI. When adding cover selection, share the gameplay algorithm with the harness rather than implementing a test-only copy. Expected destination regions are human-authored and must never be used to drive enemy movement.
 
 ## Player controller
 

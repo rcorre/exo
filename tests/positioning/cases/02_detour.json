@@ -1,0 +1,14 @@
+{
+	"name": "Crate detour — navigation baseline",
+	"description": "The direct route is blocked. Real navigation must take the enemy around the crate.",
+	"duration_seconds": 8,
+	"player": [2, 0],
+	"enemies": [
+		{"id": "E1", "start": [-9, 0], "expected": [{"center": [-3, 0], "radius": 0.6}]},
+		{"id": "E2", "start": [9, 0], "expected": [{"center": [7, 0], "radius": 0.6}]}
+	],
+	"obstacles": [
+		{"center": [-6, 0], "size": [2, 2.5, 5]},
+		{"center": [3, 5], "size": [4, 1.1, 0.6], "yaw_degrees": 20}
+	]
+}
