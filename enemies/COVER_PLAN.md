@@ -4,6 +4,61 @@ This records context from the design discussion before cover implementation.
 For harness commands, fixture schema, and UI controls, see
 [`tests/positioning/README.md`](../tests/positioning/README.md).
 
+## Current status and next-session handoff
+
+The sections below this one preserve the original design discussion; statements
+about what has or has not been implemented there are **historical**, not current.
+
+- The recent cover commits implement an experimental shared selector
+  (`enemies/cover_selector.gd`), a single peek cycle
+  (`enemies/cover_sequence.gd`), and the lab adapter and fixtures. These are
+  committed; check `git status` and the log before starting further work.
+- The lab selects standing partial cover or a protected point with a side peek.
+  It samples rotated box colliders, checks static collision and navigation paths,
+  reserves hide/peek positions across actors, and uses score hysteresis. No cover
+  found means the lab actor holds its current position. Reservations are released
+  on invalid selection or explicit `release(enemy)`; freed actors are cleaned up
+  lazily. A production owner must also release them on death and exit from cover.
+- Cases `04`–`11` cover tall, rotated, flanked, competing, disconnected and low
+  cover, plus a single peek/return and flanking during a peek. The user reviewed
+  the original tall-cover, flanking and competing-enemy lab behavior positively.
+  Low cover and the peek cycle have not yet received that human review.
+- The peek sequence is a **single cycle**, not sustained combat. The lab moves
+  the actor and independently checks a shot ray on the request; it has no weapon,
+  damage, perception or production enemy scene. The selector and sequence are
+  not integrated into gameplay. The gameplay arena still has no navmesh setup;
+  `enemies/enemy.gd` still chases directly.
+- The selector assumes a flat floor, fixed capsule dimensions and static collision
+  layer 1, searches supplied `BoxShape3D` colliders, and uses fixed sample heights.
+  Critically, its firing ray aims from height 1.5 to height 1.5, whereas the real
+  enemy `_fire()` aims from 1.5 to the player's 0.9; don't treat lab shot clearance
+  as evidence that production shots clear cover. Player crouch/lean, body-point
+  exposure, dynamic obstacles, path-height offsets, and reaction/death interactions
+  also need production-specific attention. The current peek cycle emits a request;
+  a combat caller must revalidate the real shot before firing.
+- Latest checks: `tools/check.sh tests/positioning/run.gd --fixed-fps 60` passed
+  all 11 cases, and `tools/check.sh tools/smoke_test.gd` passed. Rendered lab frames
+  were inspected. A temporary physics probe confirmed reselection after flanking
+  during a peek. Reports from the runner are in `/tmp/exo-positioning` and are not
+  committed.
+
+Suggested next steps:
+
+1. Review `09_low_cover.json` and `10_peek_cycle.json` in the lab with the user;
+   the latter executes one peek and checks a ray but does not actually shoot.
+2. Design the production integration around actual enemy/player collision, shot
+   origin and target heights, sight and last-known threat position. Do not grant
+   live player tracking through walls, or cancel cover immediately on sight loss.
+   Revisit partial-cover semantics using real shot trajectories and player stance.
+3. Add gameplay navigation and a reusable world-level selector owner, handling
+   navmesh synchronization, discovery, reservations, cleanup and bounded work.
+   Preserve a fallback when navigation or useful cover is unavailable.
+4. Integrate movement and repeatable hold/peek/fire/hide behavior into the actual
+   enemy, including real shot clearance, reaction/death cancellation and replan.
+   Use throwaway physics probes with a positive control against the actual enemy
+   scene, plus visual checks; the lab alone cannot validate combat. Keep the
+   existing lab fixtures and navigation baselines as regression controls.
+
 ## User decisions / requirements
 
 - Enemies should reposition relative to the player to gain a firing angle while
