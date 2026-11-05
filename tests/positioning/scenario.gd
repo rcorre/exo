@@ -61,6 +61,10 @@ static func validate(data: Dictionary) -> String:
 		if time < 0.0 or time <= previous_time or time >= float(data.duration_seconds):
 			return "player_moves must be ordered, unique, and within the scenario duration"
 		previous_time = time
+	if data.has("min_enemy_separation") and not positive(data.min_enemy_separation):
+		return "min_enemy_separation must be positive"
+	if data.has("check_cover") and not data.check_cover is bool:
+		return "check_cover must be a boolean"
 	var policy: Variant = data.get("policy", DEFAULT_POLICY)
 	if not policy is String or not ResourceLoader.exists(policy, "Script"):
 		return "policy must name an existing script"

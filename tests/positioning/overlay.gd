@@ -37,6 +37,14 @@ func _draw() -> void:
 			points.append(screen(position))
 		if points.size() > 1:
 			draw_polyline(points, Color(ORANGE, 0.7), 2.0, true)
+		if "debug_by_enemy" in arena.policy:
+			var candidates: Array = arena.policy.debug_by_enemy.get(enemy.get_instance_id(), [])
+			for candidate: Dictionary in candidates:
+				var color := Color("70e6ff") if candidate.reason == "valid" else Color("e66b75", 0.65)
+				draw_circle(screen(candidate.hide), 3.0, color)
+				if candidate.reason == "valid":
+					draw_line(screen(candidate.hide), screen(candidate.peek), color, 1.5)
+					draw_circle(screen(candidate.peek), 3.0, color)
 		var target := screen(enemy.destination)
 		draw_line(target - Vector2(6, 0), target + Vector2(6, 0), YELLOW, 2.0)
 		draw_line(target - Vector2(0, 6), target + Vector2(0, 6), YELLOW, 2.0)

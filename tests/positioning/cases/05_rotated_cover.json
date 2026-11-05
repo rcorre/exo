@@ -1,0 +1,15 @@
+{
+  "name": "Rotated tall cover",
+  "description": "A rotated box should offer protected positions with clear side peeks on its far face, just like an axis-aligned obstacle.",
+  "duration_seconds": 12,
+  "check_cover": true,
+  "policy": "res://tests/positioning/cover_policy.gd",
+  "player": [4.24, -4.24],
+  "enemies": [
+    {"id": "E1", "start": [-4.95, 4.95], "expected": [
+      {"center": [-2.33, 0], "radius": 1.0},
+      {"center": [0, 2.33], "radius": 1.0}
+    ]}
+  ],
+  "obstacles": [{"center": [0, 0], "size": [2, 3, 4], "yaw_degrees": 45}]
+}

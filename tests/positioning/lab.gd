@@ -86,7 +86,7 @@ func _build_ui() -> void:
 	editor.add_child(radius)
 	_button(editor, "Save expectations", _save)
 	var help := Label.new()
-	help.text = "WASD: move player | Right-click floor: replace selected enemy's expected region\nGreen: expected | Yellow: target | Orange: actual trail | Reset restores fixture starts"
+	help.text = "WASD: move player | Right-click floor: replace selected enemy's expected region\nGreen: expected | Yellow: target | Orange: trail | Cyan: valid cover/peek | Red: rejected"
 	box.add_child(help)
 	status = Label.new()
 	status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART

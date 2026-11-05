@@ -63,6 +63,8 @@ func _run() -> void:
 		for enemy: Dictionary in result.enemies:
 			print("  %s actual=%s target=%s in_region=%s settled=%s grounded=%s" % [enemy.id,
 				enemy.position, enemy.destination, enemy.inside_expected, enemy.settled, enemy.grounded])
+			if not enemy.cover_checks.is_empty():
+				print("    cover: %s" % enemy.cover_checks)
 		result["scenario_path"] = path
 		if not Report.save(output, path.get_file().get_basename(), data, result):
 			failures += 1

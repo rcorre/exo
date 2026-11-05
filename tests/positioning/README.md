@@ -4,7 +4,9 @@ A dependency-free test harness for iterating on tactical positioning. Both the
 headless runner and the top-down lab use **the same fixtures, policy, navmesh,
 CharacterBody3D actors, and physics steps**. No GUT/gdUnit or other plugins.
 
-**Cover selection is not implemented yet.** The included `navigation_baseline.gd`
+An experimental box-based cover selector is exercised by the cover fixtures
+(`04` through `08`). It selects a protected point with a clear side peek; the lab actor only moves to
+that point and does not actually peek or fire. The included `navigation_baseline.gd`
 is a positive control: it picks a player-relative standoff destination, without
 considering protection. The three fixtures test the harness/navigation, not the
 existing enemy combat AI. Test actors deliberately omit perception, weapons,
@@ -76,7 +78,9 @@ godot res://tests/positioning/lab.tscn -- res://tests/positioning/cases/02_detou
 
 Green circles are accepted regions. Yellow crosses are the policy's selected
 navigation destinations. Orange lines are actual movement trails; hollow orange
-circles mark starts. Labels identify enemies and their expected regions.
+circles mark starts. For the experimental cover policy, cyan dots and lines show
+valid hide/peek pairs; red dots show rejected hide candidates. Labels identify
+enemies and their expected regions.
 
 The lab continues past the fixture deadline to allow exploration. For timed
 `player_moves`, Reset replays those events. Expectations are fixed annotations:
@@ -115,6 +119,11 @@ Keep starts on the floor, clear of walls/obstacles and other actors.
 ```
 
 - `policy` is optional; defaults to the navigation-only baseline.
+- `check_cover: true` asks the cover policy's lab adapter to independently query
+  protection, peek movement clearance and firing clearance at the actual endpoint.
+  These checks use the same sample heights and physics assumptions as selection.
+- `min_enemy_separation` optionally requires every pair of actual enemy endpoints
+  to be at least this far apart in XZ.
 - Obstacle sizes are `[width, height, depth]`; yaw is in degrees. Boxes become both
   visible geometry and static collision, and feed the runtime navmesh bake.
 - `player_moves` is optional: ordered, unique times that teleport the player to
@@ -160,7 +169,12 @@ Current scope/limitations:
 - No squad avoidance or reservation policy; actors physically collide.
 - Closest-navmesh-point projection does not prove reachability. Unreachable/stuck
   actors fail by not arriving; future selection should explicitly filter them.
-- No cover/exposure assertions until there is real cover logic to exercise.
+- Cover checks currently sample two body points and a single standing shot ray;
+  they are not a full combat or exposure simulation. The selector assumes a
+  flat floor, fixed actor dimensions and static collision layer 1. It has simple
+  hide/peek reservations and score hysteresis, but no low-cover support or peek
+  execution. The selector owner must explicitly release reservations on death or
+  when an actor stops using cover; freed actors are cleaned up lazily.
 - Fixed ticks and a fixed RNG seed reduce noise, but physics/navmesh results are
   not promised bit-identical across engine/platform versions. Use spatial regions.
 

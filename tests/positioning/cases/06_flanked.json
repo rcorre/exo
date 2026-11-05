@@ -1,0 +1,16 @@
+{
+  "name": "Flanked behind tall cover",
+  "description": "When the player moves to the other side, the enemy should leave exposed cover and find a protected position with a side peek on the opposite face.",
+  "duration_seconds": 16,
+  "check_cover": true,
+  "policy": "res://tests/positioning/cover_policy.gd",
+  "player": [6, 0],
+  "player_moves": [{"at_seconds": 5, "position": [-6, 0]}],
+  "enemies": [
+    {"id": "E1", "start": [-7, 0], "expected": [
+      {"center": [1.65, -1.65], "radius": 0.8},
+      {"center": [1.65, 1.65], "radius": 0.8}
+    ]}
+  ],
+  "obstacles": [{"center": [0, 0], "size": [2, 3, 4]}]
+}

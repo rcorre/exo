@@ -1,0 +1,15 @@
+{
+  "name": "Tall cover with side peek",
+  "description": "Enemy should hold behind the tall box, near either edge where a standing side peek can engage the player.",
+  "duration_seconds": 12,
+  "check_cover": true,
+  "policy": "res://tests/positioning/cover_policy.gd",
+  "player": [6, 0],
+  "enemies": [
+    {"id": "E1", "start": [-7, 0], "expected": [
+      {"center": [-1.65, -1.65], "radius": 0.8},
+      {"center": [-1.65, 1.65], "radius": 0.8}
+    ]}
+  ],
+  "obstacles": [{"center": [0, 0], "size": [2, 3, 4]}]
+}

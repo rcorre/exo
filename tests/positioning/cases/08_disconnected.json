@@ -1,0 +1,19 @@
+{
+  "name": "Disconnected cover",
+  "description": "A wall separates the arena: use a reachable protected position on the player's side, not candidates across the disconnected wall.",
+  "duration_seconds": 14,
+  "check_cover": true,
+  "policy": "res://tests/positioning/cover_policy.gd",
+  "player": [-10, 0],
+  "enemies": [
+    {"id": "E1", "start": [-7, -4], "expected": [
+      {"center": [-1.35, -1.65], "radius": 1.0},
+      {"center": [-1.35, 1.65], "radius": 1.0}
+    ]}
+  ],
+  "obstacles": [
+    {"center": [0, 0], "size": [1, 3, 20]},
+    {"center": [-3, 0], "size": [2, 3, 4]},
+    {"center": [4, 0], "size": [2, 3, 4]}
+  ]
+}

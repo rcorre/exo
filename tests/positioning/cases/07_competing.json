@@ -1,0 +1,18 @@
+{
+  "name": "Two enemies share cover",
+  "description": "Both enemies should find protected side-peek positions on opposite sides of the box rather than stacking at one edge.",
+  "duration_seconds": 14,
+  "check_cover": true,
+  "min_enemy_separation": 2.5,
+  "policy": "res://tests/positioning/cover_policy.gd",
+  "player": [6, 0],
+  "enemies": [
+    {"id": "E1", "start": [-7, -1], "expected": [
+      {"center": [-1.65, -1.65], "radius": 0.8}, {"center": [-1.65, 1.65], "radius": 0.8}
+    ]},
+    {"id": "E2", "start": [-7, 1], "expected": [
+      {"center": [-1.65, -1.65], "radius": 0.8}, {"center": [-1.65, 1.65], "radius": 0.8}
+    ]}
+  ],
+  "obstacles": [{"center": [0, 0], "size": [2, 3, 4]}]
+}

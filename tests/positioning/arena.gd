@@ -11,6 +11,7 @@ var player: CharacterBody3D
 var enemies: Array[CharacterBody3D] = []
 var region: NavigationRegion3D
 var policy: RefCounted
+var cover_boxes: Array[CollisionShape3D] = []
 var ticks := 0
 var running := false
 var next_player_move := 0
@@ -41,7 +42,7 @@ func setup(scenario: Dictionary, interactive: bool = false) -> bool:
 	_add_box(Vector3(0, -0.5, 0), Vector3(Scenario.ARENA_SIZE.x, 1, Scenario.ARENA_SIZE.y), 0.0, Color("303b49"))
 	for obstacle: Dictionary in data.get("obstacles", []):
 		var size := Vector3(obstacle.size[0], obstacle.size[1], obstacle.size[2])
-		_add_box(Scenario.point(obstacle.center) + Vector3.UP * size.y * 0.5, size, deg_to_rad(float(obstacle.get("yaw_degrees", 0.0))), Color("8c8273"))
+		cover_boxes.append(_add_box(Scenario.point(obstacle.center) + Vector3.UP * size.y * 0.5, size, deg_to_rad(float(obstacle.get("yaw_degrees", 0.0))), Color("8c8273")))
 	# Walls keep interactive movement within the same bounds as navigation.
 	for side in [-1.0, 1.0]:
 		_add_box(Vector3(side * 12.25, 0.5, 0), Vector3(0.5, 1, 21), 0.0, Color("617087"))
@@ -80,7 +81,7 @@ func _add_actor(id: String, at: Vector3, is_player: bool) -> CharacterBody3D:
 	add_child(actor)
 	return actor
 
-func _add_box(at: Vector3, size: Vector3, yaw: float, color: Color) -> void:
+func _add_box(at: Vector3, size: Vector3, yaw: float, color: Color) -> CollisionShape3D:
 	var body := StaticBody3D.new()
 	body.position = at
 	body.rotation.y = yaw
@@ -98,6 +99,7 @@ func _add_box(at: Vector3, size: Vector3, yaw: float, color: Color) -> void:
 	visual.material_override = material
 	body.add_child(visual)
 	region.add_child(body)
+	return collision
 
 func set_running(value: bool) -> void:
 	running = value and initialized
@@ -129,6 +131,18 @@ func snapshot() -> Dictionary:
 		var settled := Vector2(enemy.velocity.x, enemy.velocity.z).length() < 0.1
 		var grounded := enemy.is_on_floor()
 		var ok := inside and settled and grounded
+		var separation_ok := true
+		for other: CharacterBody3D in enemies:
+			if other != enemy:
+				var delta := enemy.global_position - other.global_position
+				separation_ok = separation_ok and Vector2(delta.x, delta.z).length() >= float(data.get("min_enemy_separation", 0.0))
+		ok = ok and separation_ok
+		var cover_checks: Dictionary = {}
+		if data.get("check_cover", false) and policy.has_method("check_cover"):
+			cover_checks = policy.check_cover(enemy, player, self)
+			ok = ok and cover_checks.get("protected", false) and cover_checks.get("peek_clear", false) and cover_checks.get("shot_clear", false)
+		elif data.get("check_cover", false):
+			ok = false
 		passed = passed and ok
 		var path: Array = []
 		for position: Vector3 in enemy.trace:
@@ -136,7 +150,7 @@ func snapshot() -> Dictionary:
 		results.append({"id": enemy.actor_id, "position": Scenario.coordinates(enemy.global_position),
 			"destination": Scenario.coordinates(enemy.destination), "expected": expected,
 			"inside_expected": inside, "settled": settled, "grounded": grounded,
-			"passed": ok, "trace": path})
+			"passed": ok, "separation_ok": separation_ok, "cover_checks": cover_checks, "trace": path})
 	return {"name": data.name, "policy": data.get("policy", Scenario.DEFAULT_POLICY),
 		"ticks": ticks, "seconds": elapsed(), "passed": passed,
 		"player": Scenario.coordinates(player.global_position), "enemies": results}
