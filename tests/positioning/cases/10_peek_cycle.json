@@ -1,0 +1,17 @@
+{
+  "name": "Peek and return",
+  "description": "From tall cover, approach a protected edge, move to a firing position, then return to the protected position.",
+  "duration_seconds": 12,
+  "check_cover": true,
+  "cover_kind": "side_peek",
+  "exercise_peek": true,
+  "policy": "res://tests/positioning/cover_policy.gd",
+  "player": [6, 0],
+  "enemies": [
+    {"id": "E1", "start": [-7, 0], "expected": [
+      {"center": [-1.65, -1.65], "radius": 0.8},
+      {"center": [-1.65, 1.65], "radius": 0.8}
+    ]}
+  ],
+  "obstacles": [{"center": [0, 0], "size": [2, 3, 4]}]
+}

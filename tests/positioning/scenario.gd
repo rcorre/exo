@@ -61,6 +61,8 @@ static func validate(data: Dictionary) -> String:
 		if time < 0.0 or time <= previous_time or time >= float(data.duration_seconds):
 			return "player_moves must be ordered, unique, and within the scenario duration"
 		previous_time = time
+	if data.has("exercise_peek") and not data.exercise_peek is bool:
+		return "exercise_peek must be a boolean"
 	if data.has("min_enemy_separation") and not positive(data.min_enemy_separation):
 		return "min_enemy_separation must be positive"
 	if data.has("check_cover") and not data.check_cover is bool:

@@ -1,0 +1,18 @@
+{
+  "name": "Flanked during peek",
+  "description": "When the player crosses behind the obstacle as the enemy starts peeking, abandon the old cover, then peek and return from the newly protected side.",
+  "duration_seconds": 18,
+  "check_cover": true,
+  "cover_kind": "side_peek",
+  "exercise_peek": true,
+  "policy": "res://tests/positioning/cover_policy.gd",
+  "player": [6, 0],
+  "player_moves": [{"at_seconds": 2.4, "position": [-6, 0]}],
+  "enemies": [
+    {"id": "E1", "start": [-7, 0], "expected": [
+      {"center": [1.65, -1.65], "radius": 0.8},
+      {"center": [1.65, 1.65], "radius": 0.8}
+    ]}
+  ],
+  "obstacles": [{"center": [0, 0], "size": [2, 3, 4]}]
+}

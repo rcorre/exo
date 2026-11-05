@@ -65,6 +65,8 @@ func _run() -> void:
 				enemy.position, enemy.destination, enemy.inside_expected, enemy.settled, enemy.grounded])
 			if not enemy.cover_checks.is_empty():
 				print("    cover: %s" % enemy.cover_checks)
+			if not enemy.peek_checks.is_empty():
+				print("    peek: %s" % enemy.peek_checks)
 		result["scenario_path"] = path
 		if not Report.save(output, path.get_file().get_basename(), data, result):
 			failures += 1

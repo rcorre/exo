@@ -8,6 +8,7 @@ const RADIUS := 0.4
 const HEIGHT := 1.8
 const ARRIVAL_DISTANCE := 0.15
 const REPLAN_INTERVAL := 0.25
+const CoverSequence := preload("res://enemies/cover_sequence.gd")
 
 var actor_id := ""
 var start_position := Vector3.ZERO
@@ -20,6 +21,9 @@ var arena: Node3D
 var replan_remaining := 0.0
 var agent: NavigationAgent3D
 var trace: Array[Vector3] = []
+var cover_sequence: RefCounted
+var peek_shots := 0
+var peek_shots_clear := true
 
 func _ready() -> void:
 	collision_layer = 2
@@ -50,6 +54,8 @@ func _ready() -> void:
 	label.pixel_size = 0.015
 	add_child(label)
 	if not is_player:
+		if arena.data.get("exercise_peek", false):
+			cover_sequence = CoverSequence.new()
 		agent = NavigationAgent3D.new()
 		agent.path_desired_distance = 0.25
 		agent.target_desired_distance = ARRIVAL_DISTANCE
@@ -75,10 +81,16 @@ func _physics_process(delta: float) -> void:
 				push_error("Policy returned a non-finite destination for " + actor_id)
 				active = false
 				return
-			desired = NavigationServer3D.map_get_closest_point(agent.get_navigation_map(), desired)
-			if desired.distance_to(destination) > 0.05 or agent.target_position != destination:
-				destination = desired
-				agent.target_position = destination
+			if cover_sequence == null:
+				_set_destination(desired)
+		if cover_sequence != null:
+			var choice: Dictionary = policy.selected_by_enemy.get(get_instance_id(), {})
+			var target: Vector3 = cover_sequence.step(choice, global_position, delta)
+			_set_destination(target)
+			if cover_sequence.fire_requested:
+				peek_shots += 1
+				var query := PhysicsRayQueryParameters3D.create(global_position + Vector3.UP * 1.5, arena.player.global_position + Vector3.UP * 1.5, 1)
+				peek_shots_clear = peek_shots_clear and get_world_3d().direct_space_state.intersect_ray(query).is_empty()
 		# Baked surfaces sit slightly above the physics floor. Arrival is measured
 		# on XZ in this flat fixture, not against that voxel-height offset.
 		var distance := Vector2(destination.x - global_position.x, destination.z - global_position.z).length()
@@ -95,3 +107,9 @@ func _physics_process(delta: float) -> void:
 		trace.append(global_position)
 		if trace.size() > 4096:
 			trace.pop_front()
+
+func _set_destination(desired: Vector3) -> void:
+	desired = NavigationServer3D.map_get_closest_point(agent.get_navigation_map(), desired)
+	if desired.distance_to(destination) > 0.05 or agent.target_position != destination:
+		destination = desired
+		agent.target_position = destination

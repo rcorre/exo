@@ -29,6 +29,9 @@ func setup(scenario: Dictionary, interactive: bool = false) -> bool:
 	if policy == null or not policy.has_method("choose_destination"):
 		push_error("Positioning policy needs choose_destination(enemy, player, arena)")
 		return false
+	if data.get("exercise_peek", false) and not "selected_by_enemy" in policy:
+		push_error("Peek exercise requires a policy exposing selected_by_enemy")
+		return false
 	region = NavigationRegion3D.new()
 	var navmesh := NavigationMesh.new()
 	navmesh.geometry_parsed_geometry_type = NavigationMesh.PARSED_GEOMETRY_STATIC_COLLIDERS
@@ -137,6 +140,11 @@ func snapshot() -> Dictionary:
 				var delta := enemy.global_position - other.global_position
 				separation_ok = separation_ok and Vector2(delta.x, delta.z).length() >= float(data.get("min_enemy_separation", 0.0))
 		ok = ok and separation_ok
+		var peek_checks: Dictionary = {}
+		if data.get("exercise_peek", false):
+			peek_checks = {"completed": enemy.cover_sequence.state == enemy.cover_sequence.State.COMPLETE,
+				"shots": enemy.peek_shots, "shots_clear": enemy.peek_shots_clear}
+			ok = ok and peek_checks.completed and peek_checks.shots > 0 and peek_checks.shots_clear
 		var cover_checks: Dictionary = {}
 		if data.get("check_cover", false) and policy.has_method("check_cover"):
 			cover_checks = policy.check_cover(enemy, player, self)
@@ -152,7 +160,8 @@ func snapshot() -> Dictionary:
 		results.append({"id": enemy.actor_id, "position": Scenario.coordinates(enemy.global_position),
 			"destination": Scenario.coordinates(enemy.destination), "expected": expected,
 			"inside_expected": inside, "settled": settled, "grounded": grounded,
-			"passed": ok, "separation_ok": separation_ok, "cover_checks": cover_checks, "trace": path})
+			"passed": ok, "separation_ok": separation_ok, "cover_checks": cover_checks,
+			"peek_checks": peek_checks, "trace": path})
 	return {"name": data.name, "policy": data.get("policy", Scenario.DEFAULT_POLICY),
 		"ticks": ticks, "seconds": elapsed(), "passed": passed,
 		"player": Scenario.coordinates(player.global_position), "enemies": results}
