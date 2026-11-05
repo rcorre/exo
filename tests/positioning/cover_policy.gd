@@ -20,7 +20,7 @@ func check_cover(enemy: CharacterBody3D, player: CharacterBody3D, arena: Node3D)
 		return {"protected": false, "peek_clear": false, "shot_clear": false}
 	var world: World3D = arena.get_world_3d()
 	var threat: Vector3 = player.global_position + Vector3.UP * 1.5
-	var peek: Vector3 = selected.peek
+	var peek: Vector3 = enemy.global_position if selected.kind == "partial" else selected.peek
 	# Deliberately query physics here rather than using the selector's predicates:
 	# this tests the actual endpoint, not just the chosen candidate.
 	var space := world.direct_space_state
@@ -37,8 +37,11 @@ func check_cover(enemy: CharacterBody3D, player: CharacterBody3D, arena: Node3D)
 	var start_clear := space.intersect_shape(shape, 1).is_empty()
 	shape.motion = peek - enemy.global_position
 	var sweep := space.cast_motion(shape)
+	var torso_blocked := not space.intersect_ray(torso).is_empty()
+	var head_blocked := not space.intersect_ray(head).is_empty()
 	return {
-		"protected": not space.intersect_ray(torso).is_empty() and not space.intersect_ray(head).is_empty(),
+		"protected": torso_blocked and (not head_blocked if selected.kind == "partial" else head_blocked),
+		"kind": selected.kind,
 		"peek_clear": start_clear and sweep[0] >= 0.999,
 		"shot_clear": space.intersect_ray(shot).is_empty(),
 	}

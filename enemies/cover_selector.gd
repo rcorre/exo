@@ -1,5 +1,5 @@
 extends RefCounted
-## Experimental standing/side-peek selector. Inputs are world objects, not fixtures.
+## Experimental standing partial-cover/side-peek selector; inputs are world objects.
 ## Boxes are supplied by the caller; only static collision is considered for cover.
 
 const RADIUS := 0.4
@@ -56,10 +56,20 @@ func select(enemy: CharacterBody3D, threat: Vector3, world: World3D, map: RID, b
 					var peek := transform * local_peek
 					hide.y = enemy.global_position.y
 					peek.y = hide.y
-					var entry := {"hide": hide, "peek": peek, "reason": "distance", "score": -1.0}
+					var entry := {"hide": hide, "peek": peek, "kind": "side_peek", "reason": "distance", "score": -1.0}
 					candidates.append(entry)
 					if hide.distance_to(enemy.global_position) > MAX_SEARCH:
 						continue
+					entry.reason = "exposed"
+					var threat_eye := threat + Vector3.UP * 1.5
+					if _ray_clear(world, threat_eye, hide + Vector3.UP * 0.9):
+						continue
+					# A clear head/shot ray over low cover means the standing position
+					# can engage directly while its torso remains protected.
+					if _ray_clear(world, threat_eye, hide + Vector3.UP * 1.5):
+						peek = hide
+						entry.peek = hide
+						entry.kind = "partial"
 					var projected := NavigationServer3D.map_get_closest_point(map, hide)
 					var projected_peek := NavigationServer3D.map_get_closest_point(map, peek)
 					entry.reason = "projection"
@@ -74,9 +84,6 @@ func select(enemy: CharacterBody3D, threat: Vector3, world: World3D, map: RID, b
 						continue
 					entry.reason = "clearance"
 					if not _clear_move(world, hide, peek, enemy.get_rid()):
-						continue
-					entry.reason = "exposed"
-					if _ray_clear(world, threat + Vector3.UP * 1.5, hide + Vector3.UP * 0.9) or _ray_clear(world, threat + Vector3.UP * 1.5, hide + Vector3.UP * 1.5):
 						continue
 					entry.reason = "no shot"
 					if not _ray_clear(world, peek + Vector3.UP * 1.5, threat + Vector3.UP * 1.5):

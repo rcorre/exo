@@ -1,0 +1,16 @@
+{
+  "name": "Standing partial cover",
+  "description": "A low box should protect the enemy's torso while allowing a standing shot over it, without requiring a side peek.",
+  "duration_seconds": 12,
+  "check_cover": true,
+  "cover_kind": "partial",
+  "policy": "res://tests/positioning/cover_policy.gd",
+  "player": [6, 0],
+  "enemies": [
+    {"id": "E1", "start": [-7, 0], "expected": [
+      {"center": [-1.65, -1.65], "radius": 0.8},
+      {"center": [-1.65, 1.65], "radius": 0.8}
+    ]}
+  ],
+  "obstacles": [{"center": [0, 0], "size": [2, 1.2, 4]}]
+}

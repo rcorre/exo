@@ -65,6 +65,8 @@ static func validate(data: Dictionary) -> String:
 		return "min_enemy_separation must be positive"
 	if data.has("check_cover") and not data.check_cover is bool:
 		return "check_cover must be a boolean"
+	if data.has("cover_kind") and (not data.get("check_cover", false) or data.cover_kind not in ["partial", "side_peek"]):
+		return "cover_kind requires check_cover and must be partial or side_peek"
 	var policy: Variant = data.get("policy", DEFAULT_POLICY)
 	if not policy is String or not ResourceLoader.exists(policy, "Script"):
 		return "policy must name an existing script"

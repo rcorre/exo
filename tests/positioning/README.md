@@ -5,7 +5,7 @@ headless runner and the top-down lab use **the same fixtures, policy, navmesh,
 CharacterBody3D actors, and physics steps**. No GUT/gdUnit or other plugins.
 
 An experimental box-based cover selector is exercised by the cover fixtures
-(`04` through `08`). It selects a protected point with a clear side peek; the lab actor only moves to
+(`04` through `09`). It selects standing partial cover or a protected point with a clear side peek; the lab actor only moves to
 that point and does not actually peek or fire. The included `navigation_baseline.gd`
 is a positive control: it picks a player-relative standoff destination, without
 considering protection. The three fixtures test the harness/navigation, not the
@@ -122,6 +122,8 @@ Keep starts on the floor, clear of walls/obstacles and other actors.
 - `check_cover: true` asks the cover policy's lab adapter to independently query
   protection, peek movement clearance and firing clearance at the actual endpoint.
   These checks use the same sample heights and physics assumptions as selection.
+- `cover_kind` optionally requires `partial` or `side_peek` when `check_cover`
+  is enabled. Partial cover checks a blocked torso, exposed head and clear shot.
 - `min_enemy_separation` optionally requires every pair of actual enemy endpoints
   to be at least this far apart in XZ.
 - Obstacle sizes are `[width, height, depth]`; yaw is in degrees. Boxes become both
@@ -172,7 +174,7 @@ Current scope/limitations:
 - Cover checks currently sample two body points and a single standing shot ray;
   they are not a full combat or exposure simulation. The selector assumes a
   flat floor, fixed actor dimensions and static collision layer 1. It has simple
-  hide/peek reservations and score hysteresis, but no low-cover support or peek
+  hide/peek reservations and score hysteresis, but no crouching or peek
   execution. The selector owner must explicitly release reservations on death or
   when an actor stops using cover; freed actors are cleaned up lazily.
 - Fixed ticks and a fixed RNG seed reduce noise, but physics/navmesh results are

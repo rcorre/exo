@@ -141,6 +141,8 @@ func snapshot() -> Dictionary:
 		if data.get("check_cover", false) and policy.has_method("check_cover"):
 			cover_checks = policy.check_cover(enemy, player, self)
 			ok = ok and cover_checks.get("protected", false) and cover_checks.get("peek_clear", false) and cover_checks.get("shot_clear", false)
+			if data.has("cover_kind"):
+				ok = ok and cover_checks.get("kind", "") == data.cover_kind
 		elif data.get("check_cover", false):
 			ok = false
 		passed = passed and ok
